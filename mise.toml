@@ -1,0 +1,34 @@
+[tools]
+python = "3.13"
+uv = "latest"
+
+[env]
+_.file = ".env"
+
+[tasks.dev]
+description = "Run both services"
+run = "docker compose up --build"
+
+[tasks.backend]
+description = "Run backend dev server"
+run = "cd src/backend && uv run uvicorn backend.main:app --reload"
+
+[tasks.frontend]
+description = "Run frontend dev server"
+run = "cd src/frontend && uv run python -m frontend.main"
+
+[tasks.test]
+description = "Run all tests"
+run = "uv run pytest -v"
+
+[tasks.format]
+description = "Format code"
+run = "uv run ruff format ."
+
+[tasks.lint]
+description = "Lint code"
+run = "uv run ruff check ."
+
+[tasks.auth]
+description = "Run Spotify auth helper"
+run = "cd src/backend && uv run python -m backend.auth"
