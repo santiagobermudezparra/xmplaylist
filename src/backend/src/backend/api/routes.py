@@ -22,25 +22,35 @@ def get_xm_provider() -> XMRadioProvider:
     return _xm_provider
 
 
-def get_spotify_provider() -> SpotifyProvider:
+def get_spotify_provider(settings: Settings | None = None) -> SpotifyProvider:
     global _spotify_provider
     if _spotify_provider is None:
-        _spotify_provider = SpotifyProvider()
+        if settings is None:
+            settings = get_settings()
+        _spotify_provider = SpotifyProvider(settings)
     return _spotify_provider
 
 
 def get_sync_service(settings: Settings = Depends(get_settings)) -> SyncService:
     global _sync_service
     if _sync_service is None:
-        _sync_service = SyncService(get_xm_provider(), get_spotify_provider(), settings)
+        _sync_service = SyncService(
+            get_xm_provider(), get_spotify_provider(settings), settings
+        )
     return _sync_service
 
 
 async def initialize_sync_service() -> None:
+    """Initialize sync service at startup (outside request context)."""
     global _sync_service
     try:
-        service = get_sync_service()
-        await service.start()
+        # Call get_settings() directly instead of using Depends
+        settings = get_settings()
+        if _sync_service is None:
+            _sync_service = SyncService(
+                get_xm_provider(), get_spotify_provider(settings), settings
+            )
+        await _sync_service.start()
     except Exception as e:
         logger.error(f"Failed to initialize sync service: {e}")
 
