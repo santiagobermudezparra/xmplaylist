@@ -11,7 +11,7 @@ run = "docker compose up --build"
 
 [tasks.backend]
 description = "Run backend dev server"
-run = "cd src/backend && uv run uvicorn backend.main:app --reload"
+run = "cd src/backend && uv run uvicorn backend.main:app --reload --host 0.0.0.0 --port 22112"
 
 [tasks.frontend]
 description = "Run frontend dev server"
