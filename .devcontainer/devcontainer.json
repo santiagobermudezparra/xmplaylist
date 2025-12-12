@@ -3,12 +3,16 @@
     "context": "..",
     "dockerfile": "Dockerfile"
   },
-  "postCreateCommand": "scripts/setup",
+  "postCreateCommand": ".devcontainer/run-setup.sh",
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "containerEnv": {
+    "MISE_TRUSTED_CONFIG_PATHS": "*"
   },
   "forwardPorts": [
     "22111",
     "22112"
   ]
 }
+
