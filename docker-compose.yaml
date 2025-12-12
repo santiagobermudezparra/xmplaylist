@@ -1,0 +1,27 @@
+services:
+  backend:
+    build:
+      context: . # Build from root now!
+      dockerfile: src/backend/Dockerfile
+    ports:
+      - "22112:22112"
+    environment:
+      - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}
+      - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
+      - SPOTIFY_REFRESH_TOKEN=${SPOTIFY_REFRESH_TOKEN}
+      - SPOTIFY_PLAYLIST_ID=${SPOTIFY_PLAYLIST_ID}
+      - XM_STATION=${XM_STATION:-lifewithjohnmayer}
+      - SYNC_INTERVAL=${SYNC_INTERVAL:-7200}
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: . # Build from root now!
+      dockerfile: src/frontend/Dockerfile
+    ports:
+      - "22111:22111"
+    environment:
+      - API_URL=http://backend:22112
+    depends_on:
+      - backend
+    restart: unless-stopped

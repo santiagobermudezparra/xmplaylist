@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: xm-spotify-sync
+  namespace: xm-spotify-sync
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: xm-spotify-sync
+  template:
+    metadata:
+      labels:
+        app: xm-spotify-sync
+    spec:
+      containers:
+        - name: app
+          image: ghcr.io/YOUR_USERNAME/xm-spotify-sync:v0.1.0
+          ports:
+            - containerPort: 22111
+              name: frontend
+            - containerPort: 22112
+              name: backend
+          env:
+            - name: SPOTIFY_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: spotify-credentials
+                  key: client-id
+            - name: SPOTIFY_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: spotify-credentials
+                  key: client-secret
+            - name: SPOTIFY_REFRESH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: spotify-credentials
+                  key: refresh-token
+            - name: SPOTIFY_PLAYLIST_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: xm-spotify-config
+                  key: playlist-id
+            - name: XM_STATION
+              valueFrom:
+                configMapKeyRef:
+                  name: xm-spotify-config
+                  key: xm-station
+            - name: SYNC_INTERVAL
+              valueFrom:
+                configMapKeyRef:
+                  name: xm-spotify-config
+                  key: sync-interval
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: xm-spotify-sync
+  namespace: xm-spotify-sync
+spec:
+  selector:
+    app: xm-spotify-sync
+  ports:
+    - name: frontend
+      port: 80
+      targetPort: 22111
+    - name: backend
+      port: 8080
+      targetPort: 22112
