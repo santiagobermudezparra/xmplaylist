@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XM Spotify Sync</title>
+    <style>
+        :root {
+            --spotify-green: #1DB954;
+            --spotify-dark: #191414;
+            --spotify-light: #282828;
+            --text-primary: #fff;
+            --text-secondary: #b3b3b3;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, var(--spotify-dark) 0%, #0d0d0d 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+        
+        .card {
+            background: var(--spotify-light);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .card h2 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+        
+        .status-item {
+            background: rgba(255,255,255,0.05);
+            padding: 1rem;
+            border-radius: 8px;
+        }
+        
+        .status-item label {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .status-item .value {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .status-running {
+            color: var(--spotify-green);
+        }
+        
+        .status-idle {
+            color: var(--text-secondary);
+        }
+        
+        .btn {
+            background: var(--spotify-green);
+            color: var(--spotify-dark);
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.1s, background 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn:hover {
+            transform: scale(1.02);
+            background: #1ed760;
+        }
+        
+        .btn:active {
+            transform: scale(0.98);
+        }
+        
+        .btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .sync-section {
+            text-align: center;
+            padding: 2rem 0;
+        }
+        
+        .tracks-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .track-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+        
+        .track-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .track-info {
+            flex: 1;
+        }
+        
+        .track-title {
+            font-weight: 500;
+        }
+        
+        .track-artist {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .track-time {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+        
+        .message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            text-align: center;
+        }
+        
+        .message.success {
+            background: rgba(29, 185, 84, 0.2);
+            color: var(--spotify-green);
+        }
+        
+        .message.error {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎵 XM Spotify Sync</h1>
+            <p class="subtitle">Sync "Life with John Mayer" to your Spotify playlist</p>
+        </header>
+        
+        <div class="card">
+            <h2>📊 Sync Status</h2>
+            <div class="status-grid">
+                <div class="status-item">
+                    <label>Status</label>
+                    <div class="value" id="sync-status">Loading...</div>
+                </div>
+                <div class="status-item">
+                    <label>Last Sync</label>
+                    <div class="value" id="last-sync">-</div>
+                </div>
+                <div class="status-item">
+                    <label>Next Sync</label>
+                    <div class="value" id="next-sync">-</div>
+                </div>
+                <div class="status-item">
+                    <label>Total Syncs</label>
+                    <div class="value" id="total-syncs">-</div>
+                </div>
+            </div>
+            
+            <div id="last-result" class="hidden" style="margin-top: 1rem;">
+                <h3 style="margin-bottom: 0.5rem; font-size: 1rem;">Last Result</h3>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <label>Tracks Found</label>
+                        <div class="value" id="result-found">-</div>
+                    </div>
+                    <div class="status-item">
+                        <label>Matched</label>
+                        <div class="value" id="result-matched">-</div>
+                    </div>
+                    <div class="status-item">
+                        <label>Added</label>
+                        <div class="value" id="result-added">-</div>
+                    </div>
+                    <div class="status-item">
+                        <label>Skipped</label>
+                        <div class="value" id="result-skipped">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card sync-section">
+            <button class="btn" id="sync-btn" onclick="triggerSync()">
+                <span id="btn-icon">🔄</span>
+                <span id="btn-text">Sync Now</span>
+            </button>
+            <div id="sync-message" class="message hidden"></div>
+        </div>
+        
+        <div class="card">
+            <h2>📻 Recent XM Tracks</h2>
+            <div id="tracks-list" class="tracks-list">
+                <p style="color: var(--text-secondary);">Loading tracks...</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const apiUrl = '{{ api_url }}';
+        let isPolling = false;
+        
+        function formatTime(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        
+        function formatDateTime(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleString([], { 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+        }
+        
+        async function fetchStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+                
+                const statusEl = document.getElementById('sync-status');
+                if (data.is_running) {
+                    statusEl.textContent = '🔄 Syncing...';
+                    statusEl.className = 'value status-running';
+                } else {
+                    statusEl.textContent = '✓ Idle';
+                    statusEl.className = 'value status-idle';
+                }
+                
+                document.getElementById('last-sync').textContent = formatDateTime(data.last_sync);
+                document.getElementById('next-sync').textContent = formatDateTime(data.next_sync);
+                document.getElementById('total-syncs').textContent = data.total_syncs || '0';
+                
+                if (data.last_result) {
+                    document.getElementById('last-result').classList.remove('hidden');
+                    document.getElementById('result-found').textContent = data.last_result.tracks_found || 0;
+                    document.getElementById('result-matched').textContent = data.last_result.tracks_matched || 0;
+                    document.getElementById('result-added').textContent = data.last_result.tracks_added || 0;
+                    document.getElementById('result-skipped').textContent = data.last_result.tracks_skipped || 0;
+                }
+                
+                return data.is_running;
+            } catch (error) {
+                console.error('Error fetching status:', error);
+                document.getElementById('sync-status').textContent = '⚠️ Error';
+                return false;
+            }
+        }
+        
+        async function fetchTracks() {
+            try {
+                const response = await fetch('/api/tracks');
+                const data = await response.json();
+                
+                const tracksList = document.getElementById('tracks-list');
+                
+                if (!data.tracks || data.tracks.length === 0) {
+                    tracksList.innerHTML = '<p style="color: var(--text-secondary);">No tracks available</p>';
+                    return;
+                }
+                
+                tracksList.innerHTML = data.tracks.map(track => `
+                    <div class="track-item">
+                        <div class="track-info">
+                            <div class="track-title">${track.title}</div>
+                            <div class="track-artist">${track.artists.join(', ')}</div>
+                        </div>
+                        <div class="track-time">${formatTime(track.timestamp)}</div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error fetching tracks:', error);
+                document.getElementById('tracks-list').innerHTML = 
+                    '<p style="color: #ef4444;">Error loading tracks</p>';
+            }
+        }
+        
+        async function triggerSync() {
+            const btn = document.getElementById('sync-btn');
+            const btnIcon = document.getElementById('btn-icon');
+            const btnText = document.getElementById('btn-text');
+            const message = document.getElementById('sync-message');
+            
+            btn.disabled = true;
+            btnIcon.innerHTML = '<span class="spinner"></span>';
+            btnText.textContent = 'Syncing...';
+            message.classList.add('hidden');
+            
+            try {
+                const response = await fetch('/api/sync', { method: 'POST' });
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    message.textContent = `✓ Sync complete! Added ${data.tracks_added} tracks.`;
+                    message.className = 'message success';
+                } else {
+                    message.textContent = `⚠️ ${data.error || 'Sync failed'}`;
+                    message.className = 'message error';
+                }
+                message.classList.remove('hidden');
+                
+                // Refresh data
+                await fetchStatus();
+                await fetchTracks();
+            } catch (error) {
+                message.textContent = `⚠️ Error: ${error.message}`;
+                message.className = 'message error';
+                message.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btnIcon.textContent = '🔄';
+                btnText.textContent = 'Sync Now';
+            }
+        }
+        
+        // Initial load
+        fetchStatus();
+        fetchTracks();
+        
+        // Poll for updates every 30 seconds
+        setInterval(fetchStatus, 30000);
+        setInterval(fetchTracks, 60000);
+    </script>
+</body>
+</html>
+

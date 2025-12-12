@@ -1,8 +1,15 @@
 [project]
-name = "frontend"
+name = "xm-spotify-sync-frontend"
 version = "0.1.0"
+description = "Frontend for XM Spotify Sync"
 requires-python = ">=3.13"
-dependencies = ["flask>=3.1.0", "requests>=2.32.0"]
+dependencies = [
+    "flask>=3.1.0",
+    "requests>=2.32.0",
+]
+
+[project.scripts]
+xm-spotify-frontend = "frontend.main:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -10,3 +17,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/frontend"]
+
+[dependency-groups]
+dev = ["pytest>=8.3.0", "ruff>=0.8.0"]
