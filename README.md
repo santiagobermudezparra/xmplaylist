@@ -231,6 +231,12 @@ Authorization codes expire quickly (usually within minutes). If you get an error
 ### Can't reach localhost from DevContainer
 
 Use a public callback URL instead. See the authentication section above.
+### Re-create images example
+
+docker compose build backend
+docker tag xmplaylist-backend ghcr.io/YOUR_USERNAME/xm-spotify-sync-backend:v0.1.1
+docker push ghcr.io/YOUR_USERNAME/xm-spotify-sync-backend:v0.1.1
+
 
 ## License
 
