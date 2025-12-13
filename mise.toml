@@ -6,7 +6,7 @@ uv = "latest"
 _.file = ".env"
 
 [tasks.dev]
-description = "Run both services"
+description = "Run both services with docker-compose"
 run = "docker compose up --build"
 
 [tasks.backend]
@@ -18,8 +18,16 @@ description = "Run frontend dev server"
 run = "cd src/frontend && uv run python -m frontend.main"
 
 [tasks.test]
-description = "Run all tests"
+description = "Run all pytest tests"
 run = "uv run pytest -v"
+
+[tasks."test:spotify"]
+description = "Test Spotify token refresh"
+run = "cd src/backend && uv run python -m tests.test_spotify"
+
+[tasks."test:quick"]
+description = "Quick API connectivity test"
+run = "cd src/backend && uv run python -m tests.test_quick"
 
 [tasks.format]
 description = "Format code"
@@ -32,3 +40,17 @@ run = "uv run ruff check ."
 [tasks.auth]
 description = "Run Spotify auth helper"
 run = "cd src/backend && uv run python -m backend.auth"
+
+[tasks.build]
+description = "Build Docker images"
+run = "docker compose build"
+
+[tasks.push]
+description = "Build and push Docker images (set GITHUB_USERNAME env var)"
+run = """
+docker compose build
+docker tag xmplaylist-backend ghcr.io/${GITHUB_USERNAME}/xm-spotify-sync-backend:latest
+docker tag xmplaylist-frontend ghcr.io/${GITHUB_USERNAME}/xm-spotify-sync-frontend:latest
+docker push ghcr.io/${GITHUB_USERNAME}/xm-spotify-sync-backend:latest
+docker push ghcr.io/${GITHUB_USERNAME}/xm-spotify-sync-frontend:latest
+"""
